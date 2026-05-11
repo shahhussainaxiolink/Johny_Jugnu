@@ -875,9 +875,9 @@ function StorefrontApp() {
         >
           JOHNNY<span className="text-brand-red">&</span>JUGNU
         </button>
-        <p className="text-white-50 small mb-0">© {new Date().getFullYear()} Johnny & Jugnu Johar Town. Built with Bootstrap.</p>
+        <p className="text-white-50 small mb-0">© {new Date().getFullYear()} Johnny & Jugnu Johar Town.</p>
       </footer>
-
+Built
     </div>
   );
 }
