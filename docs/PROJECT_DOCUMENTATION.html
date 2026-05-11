@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Johnny & Jugnu Project Documentation</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #1f2937;
+      background: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+    }
+    h1, h2, h3 {
+      color: #111827;
+      line-height: 1.2;
+      page-break-after: avoid;
+    }
+    h1 {
+      margin: 0 0 18px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #e11d48;
+      font-size: 26pt;
+    }
+    h2 {
+      margin: 26px 0 10px;
+      padding-top: 8px;
+      font-size: 17pt;
+    }
+    h3 {
+      margin: 20px 0 8px;
+      font-size: 13pt;
+    }
+    p { margin: 0 0 9px; }
+    ul { margin: 0 0 12px 20px; padding: 0; }
+    li { margin: 3px 0; }
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #f3f4f6;
+      color: #be123c;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 9.5pt;
+    }
+    pre {
+      margin: 10px 0 14px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #111827;
+      color: #f9fafb;
+      white-space: pre-wrap;
+      word-break: break-word;
+      page-break-inside: avoid;
+    }
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+<body>
+<h1>Johnny &amp; Jugnu Project Documentation</h1>
+<p>Version: 1.0  </p>
+<p>Prepared for: Johnny &amp; Jugnu Restaurant Website  </p>
+<p>Stack: React, Vite, Express, MongoDB Atlas, Railway, Vercel</p>
+<h2>1. Project Overview</h2>
+<p>Johnny &amp; Jugnu is a restaurant ordering website with a public storefront, cart/order flow, contact form, and a hidden admin order dashboard.</p>
+<p>The project is split into two main applications:</p>
+<ul>
+<li><code>Frontend/</code>: React and Vite single-page application deployed on Vercel.</li>
+<li><code>backend/</code>: Express.js REST API deployed on Railway.</li>
+</ul>
+<p>The frontend communicates with the backend through the public Railway API URL. The backend stores menu items, deals, orders, and contact messages in MongoDB Atlas.</p>
+<h2>2. Repository Structure</h2>
+<pre><code>Johny_Jugnu/
+  Frontend/
+    src/
+      App.jsx
+      App.css
+      index.css
+      main.jsx
+      services/
+        api.js
+      assets/
+        hero.png
+    public/
+    package.json
+    vite.config.js
+    vercel.json
+
+  backend/
+    models/
+      Contact.js
+      Menu.js
+      Order.js
+    routes/
+      admin.js
+      contact.js
+      menu.js
+      orders.js
+    services/
+      orderEmail.js
+    package.json
+    server.js
+    seed.js
+    .env.example
+
+  railway.json
+  package.json
+  docs/
+    PROJECT_DOCUMENTATION.md
+    PROJECT_DOCUMENTATION.pdf</code></pre>
+<h2>3. Frontend Application</h2>
+<p>The frontend is a React single-page application built with Vite.</p>
+<p>Main file:</p>
+<pre><code>Frontend/src/App.jsx</code></pre>
+<p>Important responsibilities:</p>
+<ul>
+<li>Displays the restaurant landing page.</li>
+<li>Fetches menu items and categories from the backend.</li>
+<li>Lets customers add items to cart.</li>
+<li>Lets customers place orders.</li>
+<li>Sends contact form messages.</li>
+<li>Opens the admin screen when the logo is clicked five times.</li>
+</ul>
+<h3>Frontend API Configuration</h3>
+<p>The frontend API client is in:</p>
+<pre><code>Frontend/src/services/api.js</code></pre>
+<p>It uses this environment variable:</p>
+<pre><code>VITE_API_URL=https://johnyjugnu-production.up.railway.app/api</code></pre>
+<p>This value must be configured in Vercel under:</p>
+<pre><code>Project Settings -&gt; Environment Variables</code></pre>
+<h3>Frontend Deployment</h3>
+<p>The frontend is deployed on Vercel.</p>
+<p>Current live frontend URL:</p>
+<pre><code>https://johny-jugnu.vercel.app</code></pre>
+<p>Vercel build settings:</p>
+<pre><code>Framework Preset: Vite
+Build Command: npm run build
+Output Directory: dist
+Install Command: npm install
+Root Directory: Frontend</code></pre>
+<h3>Vercel Route Rewrite</h3>
+<p>Because this is a React single-page application, direct visits to paths such as <code>/admin</code> must be rewritten to <code>index.html</code>.</p>
+<p>This is handled by:</p>
+<pre><code>Frontend/vercel.json</code></pre>
+<pre><code>{
+  &quot;rewrites&quot;: [
+    {
+      &quot;source&quot;: &quot;/(.*)&quot;,
+      &quot;destination&quot;: &quot;/index.html&quot;
+    }
+  ]
+}</code></pre>
+<p>Without this file, Vercel may show:</p>
+<pre><code>404: NOT_FOUND</code></pre>
+<p>when opening:</p>
+<pre><code>https://johny-jugnu.vercel.app/admin</code></pre>
+<h2>4. Backend Application</h2>
+<p>The backend is an Express.js API using MongoDB through Mongoose.</p>
+<p>Main file:</p>
+<pre><code>backend/server.js</code></pre>
+<p>The backend handles:</p>
+<ul>
+<li>Menu item reads.</li>
+<li>Deal reads.</li>
+<li>Order creation.</li>
+<li>Order status lookup.</li>
+<li>Admin active order dashboard data.</li>
+<li>Contact form submissions.</li>
+<li>Optional email notifications.</li>
+</ul>
+<h3>Backend Deployment</h3>
+<p>The backend is deployed on Railway.</p>
+<p>Current backend URL:</p>
+<pre><code>https://johnyjugnu-production.up.railway.app</code></pre>
+<p>API base URL:</p>
+<pre><code>https://johnyjugnu-production.up.railway.app/api</code></pre>
+<p>Health check:</p>
+<pre><code>https://johnyjugnu-production.up.railway.app/api/health</code></pre>
+<h3>Railway Configuration</h3>
+<p>The root file:</p>
+<pre><code>railway.json</code></pre>
+<p>contains:</p>
+<pre><code>{
+  &quot;$schema&quot;: &quot;https://railway.com/railway.schema.json&quot;,
+  &quot;build&quot;: {
+    &quot;builder&quot;: &quot;NIXPACKS&quot;
+  },
+  &quot;deploy&quot;: {
+    &quot;startCommand&quot;: &quot;npm start&quot;,
+    &quot;healthcheckPath&quot;: &quot;/api/health&quot;,
+    &quot;healthcheckTimeout&quot;: 100
+  }
+}</code></pre>
+<p>The backend does not need a separate build step because it runs directly with Node.js.</p>
+<h2>5. Environment Variables</h2>
+<p>Secrets must not be committed to Git.</p>
+<p>Use:</p>
+<pre><code>backend/.env.example</code></pre>
+<p>as the template for required variables.</p>
+<h3>Backend Variables on Railway</h3>
+<p>Required:</p>
+<pre><code>NODE_ENV=production
+MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/johnny-jugnu?retryWrites=true&amp;w=majority&amp;appName=Cluster0
+FRONTEND_URL=https://johny-jugnu.vercel.app
+ADMIN_PIN=your-admin-pin</code></pre>
+<p>Optional email variables:</p>
+<pre><code>EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-gmail-app-password
+RESTAURANT_EMAIL=restaurant-email@example.com</code></pre>
+<h3>Frontend Variables on Vercel</h3>
+<p>Required:</p>
+<pre><code>VITE_API_URL=https://johnyjugnu-production.up.railway.app/api</code></pre>
+<h2>6. CORS Setup</h2>
+<p>CORS is configured in:</p>
+<pre><code>backend/server.js</code></pre>
+<p>Allowed origins include:</p>
+<pre><code>https://johny-jugnu.vercel.app
+http://localhost:5173</code></pre>
+<p>The backend also reads:</p>
+<pre><code>FRONTEND_URL</code></pre>
+<p>from Railway variables.</p>
+<p>Important rules:</p>
+<ul>
+<li><code>FRONTEND_URL</code> should not include <code>/api</code>.</li>
+<li><code>FRONTEND_URL</code> should not include a trailing slash.</li>
+<li>Correct value:</li>
+</ul>
+<pre><code>FRONTEND_URL=https://johny-jugnu.vercel.app</code></pre>
+<p>The backend also normalizes a trailing slash if one is accidentally added.</p>
+<h2>7. Railway Proxy and Rate Limiting</h2>
+<p>Railway runs the app behind a proxy and sends <code>X-Forwarded-For</code>.</p>
+<p>Express must trust that proxy so <code>express-rate-limit</code> can identify client IPs correctly.</p>
+<p>This is configured in:</p>
+<pre><code>backend/server.js</code></pre>
+<pre><code>app.set('trust proxy', 1);</code></pre>
+<p>Without this setting, Railway logs may show:</p>
+<pre><code>ERR_ERL_UNEXPECTED_X_FORWARDED_FOR</code></pre>
+<h2>8. MongoDB Atlas Setup</h2>
+<p>The backend connects to MongoDB Atlas using:</p>
+<pre><code>MONGODB_URI</code></pre>
+<p>MongoDB Atlas must allow Railway to connect.</p>
+<p>In MongoDB Atlas:</p>
+<pre><code>Network Access -&gt; Add IP Address</code></pre>
+<p>Allow access from anywhere:</p>
+<pre><code>0.0.0.0/0</code></pre>
+<p>Status must be:</p>
+<pre><code>Active</code></pre>
+<p>If this is not active, Railway may log:</p>
+<pre><code>MongooseServerSelectionError: Could not connect to any servers in your MongoDB Atlas cluster</code></pre>
+<p>Also confirm the database user exists in:</p>
+<pre><code>Database Access</code></pre>
+<p>and that the password in Railway matches the Atlas password.</p>
+<h2>9. Backend API Endpoints</h2>
+<p>All backend routes are prefixed with:</p>
+<pre><code>/api</code></pre>
+<h3>Health</h3>
+<pre><code>GET /api/health</code></pre>
+<p>Returns a simple status response confirming the API is running.</p>
+<h3>Menu</h3>
+<pre><code>GET /api/menu</code></pre>
+<p>Returns available menu items and deals.</p>
+<pre><code>GET /api/menu/categories</code></pre>
+<p>Returns all available menu categories.</p>
+<pre><code>GET /api/menu/popular</code></pre>
+<p>Returns popular menu items.</p>
+<pre><code>GET /api/menu/:id</code></pre>
+<p>Returns a single menu item by numeric item ID.</p>
+<h3>Orders</h3>
+<pre><code>POST /api/orders</code></pre>
+<p>Creates a new customer order.</p>
+<p>Expected body:</p>
+<pre><code>{
+  &quot;customerInfo&quot;: {
+    &quot;name&quot;: &quot;Customer Name&quot;,
+    &quot;email&quot;: &quot;customer@example.com&quot;,
+    &quot;phone&quot;: &quot;03000000000&quot;,
+    &quot;address&quot;: &quot;Delivery address&quot;
+  },
+  &quot;items&quot;: [
+    {
+      &quot;menuItemId&quot;: 1,
+      &quot;name&quot;: &quot;Burger&quot;,
+      &quot;price&quot;: 500,
+      &quot;quantity&quot;: 1
+    }
+  ],
+  &quot;orderType&quot;: &quot;delivery&quot;,
+  &quot;paymentMethod&quot;: &quot;cash&quot;,
+  &quot;specialInstructions&quot;: &quot;Optional notes&quot;
+}</code></pre>
+<pre><code>GET /api/orders/:orderNumber</code></pre>
+<p>Returns order status details for a customer order.</p>
+<pre><code>PUT /api/orders/:orderNumber/status</code></pre>
+<p>Updates order status.</p>
+<h3>Admin</h3>
+<p>Admin requests require this request header:</p>
+<pre><code>x-admin-pin: your-admin-pin</code></pre>
+<pre><code>GET /api/admin/orders/active</code></pre>
+<p>Returns active orders with statuses:</p>
+<pre><code>pending, confirmed, preparing, ready</code></pre>
+<pre><code>GET /api/admin/orders</code></pre>
+<p>Returns all orders.</p>
+<pre><code>GET /api/admin/orders/stats</code></pre>
+<p>Returns total order counts and revenue statistics.</p>
+<pre><code>PUT /api/admin/orders/:orderNumber/status</code></pre>
+<p>Updates an order status from the admin dashboard.</p>
+<h3>Contact</h3>
+<pre><code>POST /api/contact</code></pre>
+<p>Creates a contact message.</p>
+<p>Expected body:</p>
+<pre><code>{
+  &quot;name&quot;: &quot;Customer Name&quot;,
+  &quot;email&quot;: &quot;customer@example.com&quot;,
+  &quot;message&quot;: &quot;Message text&quot;,
+  &quot;subject&quot;: &quot;General Inquiry&quot;
+}</code></pre>
+<pre><code>GET /api/contact</code></pre>
+<p>Returns contact messages.</p>
+<pre><code>PUT /api/contact/:id/reply</code></pre>
+<p>Stores a reply and optionally sends a reply email.</p>
+<pre><code>PUT /api/contact/:id/status</code></pre>
+<p>Updates contact message status.</p>
+<h2>10. Database Models</h2>
+<h3>MenuItem</h3>
+<p>Stored in:</p>
+<pre><code>backend/models/Menu.js</code></pre>
+<p>Fields:</p>
+<ul>
+<li><code>id</code>: numeric menu item ID.</li>
+<li><code>name</code>: item name.</li>
+<li><code>category</code>: one of <code>Burgers</code>, <code>Fries</code>, <code>Wraps</code>, <code>Drinks</code>, <code>Deals</code>.</li>
+<li><code>price</code>: item price.</li>
+<li><code>rating</code>: number between 0 and 5.</li>
+<li><code>img</code>: image URL.</li>
+<li><code>description</code>: optional description.</li>
+<li><code>available</code>: whether item is visible.</li>
+<li><code>isPopular</code>: whether item appears in popular listings.</li>
+</ul>
+<h3>Deal</h3>
+<p>Stored in:</p>
+<pre><code>backend/models/Menu.js</code></pre>
+<p>Fields:</p>
+<ul>
+<li><code>id</code>: numeric deal ID.</li>
+<li><code>name</code>: deal name.</li>
+<li><code>desc</code>: deal description.</li>
+<li><code>oldPrice</code>: previous price.</li>
+<li><code>newPrice</code>: discounted price.</li>
+<li><code>img</code>: image URL.</li>
+<li><code>available</code>: whether deal is visible.</li>
+<li><code>expiresAt</code>: optional expiry date.</li>
+</ul>
+<h3>Order</h3>
+<p>Stored in:</p>
+<pre><code>backend/models/Order.js</code></pre>
+<p>Fields:</p>
+<ul>
+<li><code>orderNumber</code>: generated order number such as <code>JJ123456789</code>.</li>
+<li><code>customerInfo</code>: name, email, phone, and optional address.</li>
+<li><code>items</code>: ordered menu items.</li>
+<li><code>subtotal</code>: item total before tax and delivery.</li>
+<li><code>tax</code>: calculated as 10 percent of subtotal.</li>
+<li><code>deliveryFee</code>: Rs. 150 for delivery orders.</li>
+<li><code>total</code>: final order total.</li>
+<li><code>orderType</code>: <code>delivery</code> or <code>pickup</code>.</li>
+<li><code>paymentMethod</code>: <code>cash</code>, <code>card</code>, or <code>online</code>.</li>
+<li><code>paymentStatus</code>: <code>pending</code>, <code>paid</code>, or <code>failed</code>.</li>
+<li><code>orderStatus</code>: <code>pending</code>, <code>confirmed</code>, <code>preparing</code>, <code>ready</code>, <code>delivered</code>, or <code>cancelled</code>.</li>
+<li><code>estimatedTime</code>: estimated preparation time in minutes.</li>
+<li><code>specialInstructions</code>: optional order notes.</li>
+</ul>
+<h3>Contact</h3>
+<p>Stored in:</p>
+<pre><code>backend/models/Contact.js</code></pre>
+<p>Fields:</p>
+<ul>
+<li><code>name</code>: customer name.</li>
+<li><code>email</code>: customer email.</li>
+<li><code>message</code>: message body.</li>
+<li><code>subject</code>: message subject.</li>
+<li><code>status</code>: <code>new</code>, <code>read</code>, <code>replied</code>, or <code>closed</code>.</li>
+<li><code>replyMessage</code>: optional staff reply.</li>
+<li><code>repliedAt</code>: reply timestamp.</li>
+</ul>
+<h2>11. Admin Dashboard</h2>
+<p>The admin screen is built into the React app.</p>
+<p>Access method:</p>
+<p>1. Open the public frontend.</p>
+<p>2. Click the Johnny &amp; Jugnu logo five times.</p>
+<p>3. The app navigates to:</p>
+<pre><code>/admin</code></pre>
+<p>4. Enter the admin PIN.</p>
+<p>The admin PIN is checked by the backend through:</p>
+<pre><code>x-admin-pin</code></pre>
+<p>The PIN value comes from:</p>
+<pre><code>ADMIN_PIN</code></pre>
+<p>on Railway.</p>
+<h2>12. Local Development</h2>
+<h3>Backend</h3>
+<pre><code>cd backend
+npm install
+npm run dev</code></pre>
+<p>Default local backend URL:</p>
+<pre><code>http://localhost:5001</code></pre>
+<h3>Frontend</h3>
+<pre><code>cd Frontend
+npm install
+npm run dev</code></pre>
+<p>Default local frontend URL:</p>
+<pre><code>http://localhost:5173</code></pre>
+<p>For local frontend development, set:</p>
+<pre><code>VITE_API_URL=http://localhost:5001/api</code></pre>
+<h2>13. Deployment Checklist</h2>
+<h3>Backend on Railway</h3>
+<p>1. Push backend changes to GitHub.</p>
+<p>2. Confirm Railway service root is correct.</p>
+<p>3. Confirm variables:</p>
+<pre><code>MONGODB_URI=...
+FRONTEND_URL=https://johny-jugnu.vercel.app
+ADMIN_PIN=...
+NODE_ENV=production</code></pre>
+<p>4. Redeploy Railway.</p>
+<p>5. Test:</p>
+<pre><code>https://johnyjugnu-production.up.railway.app/api/health</code></pre>
+<h3>Frontend on Vercel</h3>
+<p>1. Push frontend changes to GitHub.</p>
+<p>2. Confirm Vercel root directory is:</p>
+<pre><code>Frontend</code></pre>
+<p>3. Confirm variable:</p>
+<pre><code>VITE_API_URL=https://johnyjugnu-production.up.railway.app/api</code></pre>
+<p>4. Redeploy Vercel.</p>
+<p>5. Test:</p>
+<pre><code>https://johny-jugnu.vercel.app</code></pre>
+<p>6. Click logo five times and test:</p>
+<pre><code>https://johny-jugnu.vercel.app/admin</code></pre>
+<h2>14. Common Errors and Fixes</h2>
+<h3>Vercel 404 on <code>/admin</code></h3>
+<p>Cause:</p>
+<p>Vercel does not know <code>/admin</code> is handled by React.</p>
+<p>Fix:</p>
+<p>Add <code>Frontend/vercel.json</code> with a rewrite to <code>/index.html</code>.</p>
+<h3>CORS Error</h3>
+<p>Example:</p>
+<pre><code>No 'Access-Control-Allow-Origin' header is present</code></pre>
+<p>Fix:</p>
+<p>Set Railway variable:</p>
+<pre><code>FRONTEND_URL=https://johny-jugnu.vercel.app</code></pre>
+<p>Then redeploy Railway.</p>
+<h3>MongoDB Atlas Connection Error</h3>
+<p>Example:</p>
+<pre><code>Could not connect to any servers in your MongoDB Atlas cluster</code></pre>
+<p>Fix:</p>
+<ul>
+<li>Add <code>0.0.0.0/0</code> in Atlas Network Access.</li>
+<li>Confirm it is Active.</li>
+<li>Confirm Railway <code>MONGODB_URI</code> is correct.</li>
+<li>Confirm Atlas database user password is correct.</li>
+<li>Redeploy Railway.</li>
+</ul>
+<h3>Railway Rate Limit Proxy Error</h3>
+<p>Example:</p>
+<pre><code>ERR_ERL_UNEXPECTED_X_FORWARDED_FOR</code></pre>
+<p>Fix:</p>
+<p>Use:</p>
+<pre><code>app.set('trust proxy', 1);</code></pre>
+<p>before the rate limiter middleware.</p>
+<h3>Railway Build Command Error</h3>
+<p>Cause:</p>
+<p>Railway ran a build command from the backend folder, but the script did not exist in <code>backend/package.json</code>.</p>
+<p>Fix:</p>
+<p>Remove the custom <code>buildCommand</code> from <code>railway.json</code>. The backend runs directly using:</p>
+<pre><code>npm start</code></pre>
+<h2>15. Security Notes</h2>
+<ul>
+<li>Do not commit <code>.env</code> files.</li>
+<li>Rotate any exposed database passwords.</li>
+<li>Use a strong <code>ADMIN_PIN</code>.</li>
+<li>Do not use a personal Gmail password for email. Use a Gmail App Password.</li>
+<li>Keep <code>MONGODB_URI</code>, <code>EMAIL_PASS</code>, and <code>ADMIN_PIN</code> only in hosting environment variables.</li>
+<li>The current admin system is PIN-based. For a production restaurant dashboard, a full login system would be stronger.</li>
+</ul>
+<h2>16. Maintenance Notes</h2>
+<p>To add menu items:</p>
+<p>1. Update seed data in <code>backend/seed.js</code>, or add records directly in MongoDB Atlas.</p>
+<p>2. Confirm <code>available</code> is <code>true</code>.</p>
+<p>3. Redeploy or refresh the frontend.</p>
+<p>To change backend URL:</p>
+<p>1. Update Vercel <code>VITE_API_URL</code>.</p>
+<p>2. Redeploy frontend.</p>
+<p>To change frontend URL:</p>
+<p>1. Update Railway <code>FRONTEND_URL</code>.</p>
+<p>2. Redeploy backend.</p>
+<h2>17. Important URLs</h2>
+<p>Frontend:</p>
+<pre><code>https://johny-jugnu.vercel.app</code></pre>
+<p>Backend:</p>
+<pre><code>https://johnyjugnu-production.up.railway.app</code></pre>
+<p>API base:</p>
+<pre><code>https://johnyjugnu-production.up.railway.app/api</code></pre>
+<p>Health check:</p>
+<pre><code>https://johnyjugnu-production.up.railway.app/api/health</code></pre>
+<p>Admin page:</p>
+<pre><code>https://johny-jugnu.vercel.app/admin</code></pre>
+</body>
+</html>
